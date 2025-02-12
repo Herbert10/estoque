@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+if os.getenv("HEROKU") == "true":
+    fdb.load_api("firebird_lib/libfbclient.so")
 
 # Conexão com banco Firebird
 def get_firebird_connection():
