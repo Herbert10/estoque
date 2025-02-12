@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estoque Megatoon</title>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="static/styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Cabeçalho -->
+    <header>
+        <h1>Painel de Estoque Megatoon</h1>
+    </header>
+
+    <!-- Corpo principal -->
+    <main>
+        {% for group, cards in grouped_cards.items() %}
+        <section class="group">
+            <h2>{{ group }}</h2>
+            <div class="card-container">
+                {% for card in cards %}
+                <div class="box" data-status="{{ card.status }}">
+                    <div class="card-content">
+                        <div class="icon">
+                            <i class="fa-solid 
+                                {% if 'impressão prioritário' in card.label|lower or 'impressão' in card.label|lower %}fa-print
+                                {% elif 'atribuição de separador prioritário' in card.label|lower or 'atribuição de separador' in card.label|lower %}fa-person
+                                {% elif 'separação prioritário' in card.label|lower or 'separação' in card.label|lower %}fa-cart-shopping
+                                {% elif 'retorno agrupamento prioritário' in card.label|lower or 'retorno agrupamento' in card.label|lower %}fa-right-left
+                                {% elif 'separação agrupamento prioritário' in card.label|lower or 'separação agrupamento' in card.label|lower %}fa-person-walking-arrow-loop-left
+                                {% elif 'conferência prioritário' in card.label|lower or 'conferência' in card.label|lower %}fa-user-check
+                                {% else %}fa-question-circle{% endif %}"></i>
+                        </div>
+                        <h3>{{ card.label }}</h3>
+                        <p class="value">{{ card.value }}</p>
+                    </div>
+                    <div class="semaforo">
+                        <div class="light red"></div>
+                        <div class="light yellow"></div>
+                        <div class="light green"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+    </main>
+
+    <!-- Rodapé -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 Alfa Dash Consultoria - Todos os direitos reservados.</p>
+        </div>
+    </footer>
+    <script src="static/scripts.js"></script>
+</body>
+</html>
+

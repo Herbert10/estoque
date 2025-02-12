@@ -1,0 +1,29 @@
+Aguardando impressão agrupamento prioritário = 156 e quando a filial do pedido for 14
+Aguardando impressão agrupamento =153 e quando filial do pedido for 14
+Aguardando separação agrupamento prioritário = 155 e quando filial do pedido for 14
+Aguardando separação agrupamento = 152 e quando filial do pedido for 14
+
+
+Aguardando retorno agrupamento Prioritario=157 e quando filial do pedido for 2
+Aguardando retorno agrupamento =146 e quando filial do pedido for 2
+
+
+Aguardando impressão prioritário= 47 e que o tipo pedido <> 13 e quando filial do pedido for 2
+Aguardando impressão =45 ou  2 e quando filial do pedido for 2
+Aguardando atribuição de separador prioritario=148 e quando filial do pedido for 2
+Aguardando atribuição de separador =149 e quando filial do pedido for 2
+Aguardando separação prioritario=30 e quando filial do pedido for 2
+Aguardando separação =4 e quando filial do pedido for 2
+Aguardando conferencia prioritario=32 e quando filial do pedido for 2
+Aguardando conferencia =6 e quando filial do pedido for 2
+
+Aguardando impressão personalizado =  47 ou 45 e que o tipo_pedido= 13 e quando filial do pedido for 2
+
+
+
+SELECT PV.PEDIDOV, PV.COD_PEDIDOV,PV.STATUS,PV.PRIORITARIO,PV.STATUS_WORKFLOW,pv.FILIAL,pv.TIPO_PEDIDO FROM PEDIDO_VENDA pv WHERE pv.EFETUADO ='F'
+
+
+
+
+

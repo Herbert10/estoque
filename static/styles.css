@@ -1,0 +1,134 @@
+/* Layout Geral */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #F8F9FA;
+    color: #212529;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Cabeçalho */
+header {
+    text-align: center;
+    padding: 5px 0; /* Reduzido o espaçamento */
+    background-color: #007BFF;
+    color: #FFFFFF;
+    font-size: 16px; /* Tamanho menor */
+    font-weight: bold;
+}
+
+/* Grupos */
+.group {
+    margin: 20px auto;
+    width: 95%; /* Margem para as laterais */
+}
+
+.group h2 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #343A40;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #DEE2E6;
+}
+
+/* Cards */
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    width: 100%;
+}
+
+.box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    padding: 10px; /* Reduzido para cards menores */
+    border: 1px solid #DEE2E6;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: 0.3s ease-in-out;
+    min-height: 80px; /* Altura mínima menor */
+}
+
+.box.highlight {
+    background: #FFF9E6;
+    border: 1px solid #FFC107;
+}
+
+/* Conteúdo do Card */
+.card-content {
+    flex: 1;
+    text-align: center;
+}
+
+.card-content .icon {
+    margin-bottom: 5px;
+}
+
+.card-content .icon i {
+    font-size: 24px;
+    color: #007BFF;
+}
+
+.card-content h3 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #495057;
+    margin: 0;
+}
+
+.card-content .value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #28A745;
+    margin-top: 5px;
+    text-align: center;
+}
+
+/* Semáforo */
+.semaforo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.light {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: block;
+    background: #CED4DA;
+}
+
+.light.red.active {
+    background: #FF4444;
+}
+
+.light.yellow.active {
+    background: #FFD700;
+}
+
+.light.green.active {
+    background: #00C851;
+}
+
+/* Rodapé */
+footer {
+    background-color: #007BFF;
+    color: #FFFFFF;
+    text-align: center;
+    padding: 10px 0; /* Mantém espaçamento consistente */
+    font-size: 12px;
+    position: relative;
+}
+
+.footer-content {
+    max-width: 95%;
+    margin: 0 auto;
+}
