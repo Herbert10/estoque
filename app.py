@@ -1,57 +1,64 @@
 from flask import Flask, render_template, jsonify
-import fdb
 import os
+import requests
+import fdb
 from dotenv import load_dotenv
 
-# Carregar variáveis de ambiente do arquivo .env
+# Carregar variáveis do .env
 load_dotenv()
 
 app = Flask(__name__)
 
-# Conexão com banco Firebird
+# Detecta se está rodando no Render (sem Firebird instalado)
+USE_FIREBIRD_API = os.getenv("USE_FIREBIRD_API", "false").lower() == "true"
+
+# URL da API Firebird (se rodando no Render)
+FIREBIRD_API_URL = os.getenv("FIREBIRD_API_URL", "http://alfadash.ddns.net:5001/api/firebird-data")
+
+
+# 🔹 1️⃣ Função para buscar os dados do Firebird (quando rodando localmente)
 def get_firebird_connection():
-    try:
-        conn = fdb.connect(
-            host=os.getenv("FIREBIRD_HOST", "127.0.0.1"),
-            port=int(os.getenv("FIREBIRD_PORT", 3050)),
-            database=os.getenv("FIREBIRD_DATABASE", "/caminho/para/seu_banco.fdb"),
-            user=os.getenv("FIREBIRD_USER", "SYSDBA"),
-            password=os.getenv("FIREBIRD_PASSWORD", "masterkey"),
-            charset="UTF8"
-        )
-        return conn
-    except Exception as e:
-        print(f"Erro na conexão com Firebird: {e}")
-        return None
+    return fdb.connect(
+        host=os.getenv("FIREBIRD_HOST", "127.0.0.1"),
+        port=int(os.getenv("FIREBIRD_PORT", 3050)),
+        database=os.getenv("FIREBIRD_DATABASE", "/caminho/para/seu_banco.fdb"),
+        user=os.getenv("FIREBIRD_USER", "SYSDBA"),
+        password=os.getenv("FIREBIRD_PASSWORD", "masterkey"),
+    )
 
-# Função para buscar dados do banco
+
+# 🔹 2️⃣ Função para buscar dados, conectando ao Firebird local ou à API Firebird remota
 def fetch_data():
-    conn = get_firebird_connection()
-    if conn is None:
-        return {"erro": "Não foi possível conectar ao banco Firebird"}
+    if USE_FIREBIRD_API:
+        try:
+            response = requests.get(FIREBIRD_API_URL, timeout=5)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            return {"erro": f"Falha ao conectar à API Firebird: {str(e)}"}
+    else:
+        try:
+            conn = get_firebird_connection()
+            cursor = conn.cursor()
 
-    try:
-        cursor = conn.cursor()
-        query = """
-            SELECT PV.STATUS_WORKFLOW, COUNT(PV.PEDIDOV) AS QUANTIDADE
-            FROM PEDIDO_VENDA PV
-            WHERE PV.EFETUADO = 'F'
-            GROUP BY PV.STATUS_WORKFLOW;
-        """
-        cursor.execute(query)
-        result = cursor.fetchall()
-        conn.close()
-        return {str(row[0]): row[1] for row in result}
-    except Exception as e:
-        print(f"Erro ao buscar dados: {e}")
-        return {"erro": "Falha ao buscar dados no banco"}
+            query = """
+                SELECT PV.STATUS_WORKFLOW, COUNT(PV.PEDIDOV) AS QUANTIDADE
+                FROM PEDIDO_VENDA PV
+                WHERE PV.EFETUADO = 'F'
+                GROUP BY PV.STATUS_WORKFLOW;
+            """
+            cursor.execute(query)
+            result = cursor.fetchall()
+            conn.close()
+            return {str(row[0]): row[1] for row in result}
+        except Exception as e:
+            return {"erro": f"Erro na conexão com Firebird: {str(e)}"}
 
-# Rota principal - renderiza o template
+
 @app.route("/")
 def index():
     db_data = fetch_data()
 
-    # Cards pré-definidos
     grouped_cards = {
         "Personalizado": [
             {"label": "Aguardando impressão personalizado", "status": "47", "filial": "2", "tipo_pedido": "13"}
@@ -78,20 +85,21 @@ def index():
         ],
     }
 
-    # Atribuir valores vindos do banco
+    # Atribuir valores vindos dos dados recebidos
     if "erro" not in db_data:
         for group, cards in grouped_cards.items():
             for card in cards:
-                card["value"] = db_data.get(card["status"], 0)
+                status_str = str(card["status"])
+                card["value"] = db_data.get(status_str, 0)
 
     return render_template("index.html", grouped_cards=grouped_cards)
 
-# Rota API para retorno dos dados em JSON
+
 @app.route("/api/data")
 def get_data():
     return jsonify(fetch_data())
 
-# Inicializa a aplicação
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port)
