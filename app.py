@@ -3,49 +3,55 @@ import fdb
 import os
 from dotenv import load_dotenv
 
-
-os.environ["LD_LIBRARY_PATH"] = "/app/.heroku/python/lib"
-os.environ["FIREBIRD_HOME"] = "/app/.heroku/python"
-os.environ["FIREBIRD_LIB"] = "/app/.heroku/python/lib"
-
-# Carregar variáveis do .env
+# Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
 app = Flask(__name__)
-if os.getenv("HEROKU") == "true":
-    fdb.load_api("firebird_lib/libfbclient.so")
 
 # Conexão com banco Firebird
 def get_firebird_connection():
-    return fdb.connect(
-        host=os.getenv("FIREBIRD_HOST"),
-        port=int(os.getenv("FIREBIRD_PORT")),
-        database=os.getenv("FIREBIRD_DATABASE"),
-        user=os.getenv("FIREBIRD_USER"),
-        password=os.getenv("FIREBIRD_PASSWORD"),
-    )
+    try:
+        conn = fdb.connect(
+            host=os.getenv("FIREBIRD_HOST", "127.0.0.1"),
+            port=int(os.getenv("FIREBIRD_PORT", 3050)),
+            database=os.getenv("FIREBIRD_DATABASE", "/caminho/para/seu_banco.fdb"),
+            user=os.getenv("FIREBIRD_USER", "SYSDBA"),
+            password=os.getenv("FIREBIRD_PASSWORD", "masterkey"),
+            charset="UTF8"
+        )
+        return conn
+    except Exception as e:
+        print(f"Erro na conexão com Firebird: {e}")
+        return None
 
-# Consulta ao banco
+# Função para buscar dados do banco
 def fetch_data():
     conn = get_firebird_connection()
-    cursor = conn.cursor()
+    if conn is None:
+        return {"erro": "Não foi possível conectar ao banco Firebird"}
 
-    query = """
-        SELECT PV.STATUS_WORKFLOW, COUNT(PV.PEDIDOV) AS QUANTIDADE
-        FROM PEDIDO_VENDA PV
-        WHERE PV.EFETUADO = 'F'
-        GROUP BY PV.STATUS_WORKFLOW;
-    """
-    cursor.execute(query)
-    result = cursor.fetchall()
-    conn.close()
-    return {str(row[0]): row[1] for row in result}
+    try:
+        cursor = conn.cursor()
+        query = """
+            SELECT PV.STATUS_WORKFLOW, COUNT(PV.PEDIDOV) AS QUANTIDADE
+            FROM PEDIDO_VENDA PV
+            WHERE PV.EFETUADO = 'F'
+            GROUP BY PV.STATUS_WORKFLOW;
+        """
+        cursor.execute(query)
+        result = cursor.fetchall()
+        conn.close()
+        return {str(row[0]): row[1] for row in result}
+    except Exception as e:
+        print(f"Erro ao buscar dados: {e}")
+        return {"erro": "Falha ao buscar dados no banco"}
 
+# Rota principal - renderiza o template
 @app.route("/")
 def index():
     db_data = fetch_data()
 
-    # Cards
+    # Cards pré-definidos
     grouped_cards = {
         "Personalizado": [
             {"label": "Aguardando impressão personalizado", "status": "47", "filial": "2", "tipo_pedido": "13"}
@@ -72,18 +78,20 @@ def index():
         ],
     }
 
-    # Atribuir valores pelos dados do banco
-    for group, cards in grouped_cards.items():
-        for card in cards:
-            card["value"] = db_data.get(card["status"], 0)
+    # Atribuir valores vindos do banco
+    if "erro" not in db_data:
+        for group, cards in grouped_cards.items():
+            for card in cards:
+                card["value"] = db_data.get(card["status"], 0)
 
     return render_template("index.html", grouped_cards=grouped_cards)
 
+# Rota API para retorno dos dados em JSON
 @app.route("/api/data")
 def get_data():
-    db_data = fetch_data()
-    return jsonify(db_data)
+    return jsonify(fetch_data())
 
+# Inicializa a aplicação
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000 )
-
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
